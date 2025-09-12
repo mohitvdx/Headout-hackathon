@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PostInput from './components/PostInput'
 import PostPreview from './components/PostPreview'
+import PostCard from './components/PostCard'
 import Settings from './components/Settings'
 import './App.css'
 
@@ -9,6 +10,27 @@ function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [currentPost, setCurrentPost] = useState(null)
   const [showPreview, setShowPreview] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  // Load posts on component mount
+  useEffect(() => {
+    loadPosts()
+  }, [])
+
+  const loadPosts = async () => {
+    try {
+      const response = await fetch('http://localhost:5000/api/posts')
+      const result = await response.json()
+      
+      if (result.success) {
+        setPosts(result.data)
+      }
+    } catch (error) {
+      console.error('Error loading posts:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handlePostSubmit = async (postContent) => {
     try {
@@ -57,11 +79,60 @@ function App() {
     setShowPreview(false)
   }
 
-  const handlePublish = (post) => {
-    // Add to posts feed
-    setPosts(prevPosts => [post, ...prevPosts])
-    setCurrentPost(null)
-    setShowPreview(false)
+  const handlePublish = async (post) => {
+    try {
+      // Save post to database
+      const response = await fetch('http://localhost:5000/api/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: post.content,
+          type: post.type,
+          author: 'You'
+        }),
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        // Add to local state
+        setPosts(prevPosts => [result.data, ...prevPosts])
+        setCurrentPost(null)
+        setShowPreview(false)
+      } else {
+        alert('Error saving post: ' + result.error)
+      }
+    } catch (error) {
+      console.error('Error saving post:', error)
+      alert('Error connecting to server')
+    }
+  }
+
+  const handleRSVP = async (postId, status) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/posts/${postId}/rsvp`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status }),
+      })
+
+      const result = await response.json()
+      
+      if (result.success) {
+        // Update local state with new RSVP counts
+        setPosts(prevPosts => 
+          prevPosts.map(post => 
+            post._id === postId ? result.data : post
+          )
+        )
+      }
+    } catch (error) {
+      console.error('Error updating RSVP:', error)
+    }
   }
 
   return (
@@ -97,34 +168,17 @@ function App() {
         
         {/* Posts Feed */}
         <div className="mt-6 space-y-4">
-          {posts.length > 0 ? (
-            posts.map((post, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <div className="flex items-start space-x-3">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                    <span className="text-gray-600 font-medium">U</span>
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <span className="font-medium text-gray-900">You</span>
-                      <span className="text-gray-500 text-sm">
-                        {new Date(post.timestamp).toLocaleString()}
-                      </span>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        post.type === 'event' ? 'bg-green-100 text-green-800' :
-                        post.type === 'poll' ? 'bg-purple-100 text-purple-800' :
-                        post.type === 'announcement' ? 'bg-blue-100 text-blue-800' :
-                        post.type === 'job' ? 'bg-orange-100 text-orange-800' :
-                        post.type === 'achievement' ? 'bg-yellow-100 text-yellow-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {post.type}
-                      </span>
-                    </div>
-                    <p className="text-gray-900 whitespace-pre-wrap">{post.content}</p>
-                  </div>
-                </div>
-              </div>
+          {loading ? (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <p className="text-gray-500 text-center">Loading posts...</p>
+            </div>
+          ) : posts.length > 0 ? (
+            posts.map((post) => (
+              <PostCard 
+                key={post._id || post.id} 
+                post={{...post, id: post._id || post.id}} 
+                onRSVP={handleRSVP}
+              />
             ))
           ) : !showPreview && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
