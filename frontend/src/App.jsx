@@ -110,18 +110,18 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50">
+      <div className="min-h-screen bg-slate-50">
         {/* Header */}
         <div className="max-w-2xl mx-auto py-8 px-4">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold text-slate-900">
                 Professional Network
               </h1>
-              <p className="text-amber-700/70 text-sm mt-1">Share your professional journey with AI assistance</p>
+              <p className="text-slate-600 text-sm mt-1">Share your professional journey with AI assistance</p>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full flex items-center justify-center">
+              <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center shadow-md">
                 <span className="text-white font-semibold text-sm">✨</span>
               </div>
             </div>
@@ -141,7 +141,7 @@ function App() {
           {/* Posts Feed */}
           <div className="mt-6 space-y-4">
             {loading ? (
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-amber-200/50 p-6">
+              <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-lg shadow-md p-6">
                 <LoadingSpinner text="Loading posts..." />
               </div>
             ) : posts.length > 0 ? (
@@ -153,8 +153,8 @@ function App() {
                 />
               ))
             ) : !showPreview && (
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-amber-200/50 p-6">
-                <p className="text-amber-700/70 text-center">Your posts will appear here</p>
+              <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-lg shadow-md p-6">
+                <p className="text-slate-600 text-center">Your posts will appear here</p>
               </div>
             )}
           </div>
