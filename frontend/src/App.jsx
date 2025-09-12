@@ -26,6 +26,7 @@ function App() {
 
   const loadPosts = async () => {
     try {
+      // This will now call http://localhost:5050/api/posts after the fix in api.js
       const result = await api.getPosts()
       setPosts(result.data)
     } catch (error) {
@@ -62,6 +63,9 @@ function App() {
       } else {
         showError('Error connecting to server')
       }
+    } finally {
+      // FIX: Ensure loading is always set to false after the API call finishes
+      setLoading(false)
     }
   }
 
@@ -99,8 +103,8 @@ function App() {
       const result = await api.updateRSVP(postId, status)
 
       setPosts(prevPosts =>
-        prevPosts.map(post =>
-          post._id === postId ? result.data : post
+        prevPosts.map(p =>
+          p._id === postId ? result.data : p
         )
       )
       showSuccess(`RSVP updated to: ${status}`)
@@ -142,7 +146,7 @@ function App() {
 
           {/* Posts Feed */}
           <div className="mt-6 space-y-4">
-            {loading ? (
+            {loading && !showPreview ? (
               <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-lg shadow-md p-6">
                 <LoadingSpinner text="Loading posts..." />
               </div>
@@ -154,9 +158,9 @@ function App() {
                   onRSVP={handleRSVP}
                 />
               ))
-            ) : !showPreview && (
+            ) : !loading && !showPreview && (
               <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-lg shadow-md p-6">
-                <p className="text-slate-600 text-center">Your posts will appear here</p>
+                <p className="text-slate-600 text-center">No posts yet. Be the first to share something!</p>
               </div>
             )}
           </div>

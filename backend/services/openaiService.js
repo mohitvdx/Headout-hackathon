@@ -2,8 +2,8 @@ const OpenAI = require('openai');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 class OpenAIService {
+  // The constructor is fine as is; clients are created per-request.
   constructor() {
-    // No persistent client; we will create per-request clients using provided API keys.
     this.client = null;
   }
 
@@ -17,7 +17,7 @@ class OpenAIService {
       return 'announcement';
     };
 
-    // Prefer Gemini when available
+    // --- Primary Strategy: Gemini ---
     const geminiKey = process.env.GEMINI_API_KEY;
     if (geminiKey) {
       try {
@@ -25,231 +25,172 @@ class OpenAIService {
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const prompt = `Classify the following text into one of exactly these three types: event, lost_found, announcement.\nReply with only the type.\n\nText: ${content}`;
         const result = await model.generateContent(prompt);
-        const text = (await result.response.text()).trim().toLowerCase();
-        if (['event','lost_found','announcement'].includes(text)) return text;
+        
+        // FIX: Correctly access the text response from the Gemini SDK.
+        const response = result.response;
+        const text = response.text().trim().toLowerCase();
+
+        if (['event', 'lost_found', 'announcement'].includes(text)) {
+          return text; // Success, we're done.
+        }
+        console.warn(`Gemini returned an invalid type: "${text}". Falling back.`);
       } catch (e) {
-        console.error('Gemini classify error:', e.message || e);
+        console.error('Gemini classification failed, falling back:', e.message || e);
       }
     }
 
-    if (!apiKey) {
-      // Heuristic fallback
-      return heuristic();
-    }
+    // --- Secondary Strategy: OpenAI ---
+    if (apiKey) {
+      try {
+        const client = new OpenAI({ apiKey });
+        const response = await client.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content: `You are a post classifier. Classify the content into ONE of these types: "event", "lost_found", or "announcement". Respond with only the type in lowercase. Default to "announcement" if unsure.`
+            },
+            { role: "user", content: content }
+          ],
+          max_tokens: 10,
+          temperature: 0.1
+        });
 
-    try {
-      const client = new OpenAI({ apiKey });
-      const response = await client.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: `You are a post classifier for a campus social network. Analyze the given content and classify it into one of these THREE types ONLY:
-            - "event": Posts about events, meetings, conferences, webinars, parties, study groups, workshops (look for dates, times, locations, RSVP mentions)
-            - "lost_found": Posts about lost or found items on campus (look for "lost", "found", "missing", item descriptions, locations where lost/found)
-            - "announcement": Official announcements from departments, news, important updates, deadlines, policy changes, administrative notices
-            
-            Respond with only the classification type in lowercase. If unsure, default to "announcement".`
-          },
-          {
-            role: "user",
-            content: content
-          }
-        ],
-        max_tokens: 10,
-        temperature: 0.1
-      });
-
-      const classification = response.choices[0].message.content.trim().toLowerCase();
-
-      // Validate the response is one of our expected types
-      const validTypes = ['event', 'lost_found', 'announcement'];
-      if (validTypes.includes(classification)) {
-        return classification;
-      } else {
-        return 'announcement'; // Default fallback
+        const classification = response.choices[0].message.content.trim().toLowerCase();
+        const validTypes = ['event', 'lost_found', 'announcement'];
+        if (validTypes.includes(classification)) {
+          return classification;
+        }
+        return 'announcement'; // Default fallback if OpenAI returns an unexpected value.
+      } catch (error) {
+        console.error('OpenAI classification failed, falling back to heuristic:', error);
       }
-    } catch (error) {
-      console.error('Error detecting post type (OpenAI):', error);
-      // Fallback to heuristic instead of failing hard
-      return heuristic();
     }
+    
+    // --- Fallback Strategy: Heuristic ---
+    return heuristic();
   }
 
   async extractEntities(content, postType, apiKey) {
     const heuristic = () => {
+      // Heuristic logic remains unchanged, it's a solid fallback.
       const text = content || '';
       if (postType === 'event') {
         const locationMatch = text.match(/at\s+([A-Za-z0-9 &,-]+)/i);
         const dateMatch = text.match(/\b(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4}|today|tomorrow)\b/i);
-        return {
-          title: undefined,
-          location: locationMatch ? locationMatch[1].trim() : null,
-          date: dateMatch ? dateMatch[0] : null,
-        };
+        return { title: undefined, location: locationMatch ? locationMatch[1].trim() : null, date: dateMatch ? dateMatch[0] : null };
       }
       if (postType === 'lost_found') {
         const status = /\bfound\b/i.test(text) ? 'found' : (/\blost\b/i.test(text) ? 'lost' : null);
-        const itemName = (text.match(/lost\s+(my\s+)?([^,\.]+)/i) || [])[2] || (text.match(/found\s+(a\s+|an\s+|the\s+)?([^,\.]+)/i) || [])[3] || null;
-        const locationMatch = text.match(/near\s+([^,\.]+)/i) || text.match(/at\s+([^,\.]+)/i);
-        return {
-          itemStatus: status,
-          itemName: itemName ? itemName.trim() : null,
-          location: locationMatch ? locationMatch[1].trim() : null,
-        };
+        const itemName = (text.match(/lost\s+(my\s+)?([^,.]+)/i) || [])[2] || (text.match(/found\s+(a\s+|an\s+|the\s+)?([^,.]+)/i) || [])[3] || null;
+        const locationMatch = text.match(/near\s+([^,.]+)/i) || text.match(/at\s+([^,.]+)/i);
+        return { itemStatus: status, itemName: itemName ? itemName.trim() : null, location: locationMatch ? locationMatch[1].trim() : null };
       }
       if (postType === 'announcement') {
         const deptMatch = text.match(/from\s+the\s+([A-Za-z &]+)\s+department/i) || text.match(/\b([A-Za-z &]+)\s+department\b/i);
         const deadlineMatch = text.match(/deadline\s+(on\s+)?(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4}|tomorrow|today)/i);
-        return {
-          department: deptMatch ? deptMatch[1].trim() : null,
-          deadline: deadlineMatch ? deadlineMatch[2] : null,
-          priority: /urgent|asap|immediately/i.test(text) ? 'high' : 'medium',
-        };
+        return { department: deptMatch ? deptMatch[1].trim() : null, deadline: deadlineMatch ? deadlineMatch[2] : null, priority: /urgent|asap|immediately/i.test(text) ? 'high' : 'medium' };
       }
       return {};
     };
 
-    // Prefer Gemini when available
+    // --- Primary Strategy: Gemini ---
     const geminiKey = process.env.GEMINI_API_KEY;
     if (geminiKey) {
       try {
         let systemPrompt = '';
         switch (postType) {
-          case 'event':
-            systemPrompt = 'Extract JSON with keys: date, location, title';
-            break;
-          case 'lost_found':
-            systemPrompt = 'Extract JSON with keys: itemStatus, itemName, location';
-            break;
-          case 'announcement':
-            systemPrompt = 'Extract JSON with keys: department, deadline, priority';
-            break;
-          default:
-            return heuristic();
+          case 'event': systemPrompt = 'Extract JSON with keys: date, location, title'; break;
+          case 'lost_found': systemPrompt = 'Extract JSON with keys: itemStatus, itemName, location'; break;
+          case 'announcement': systemPrompt = 'Extract JSON with keys: department, deadline, priority'; break;
+          default: return heuristic();
         }
+        
         const genAI = new GoogleGenerativeAI(geminiKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const result = await model.generateContent(`${systemPrompt}. Return JSON only without explanation.\nText: ${content}`);
-        const text = (await result.response.text()).trim();
-        try {
-          return JSON.parse(text);
-        } catch (_pe) {
-          return heuristic();
-        }
+        
+        // FIX: Correctly access text and clean potential markdown for robust JSON parsing.
+        const response = result.response;
+        let jsonString = response.text().trim();
+        jsonString = jsonString.replace(/^```json\s*/, '').replace(/```$/, '');
+
+        return JSON.parse(jsonString); // Success, we're done.
       } catch (e) {
-        console.error('Gemini extract error:', e.message || e);
+        console.error('Gemini entity extraction failed, falling back:', e.message || e);
       }
     }
-
-    if (!apiKey) {
-      // Heuristic extraction
-      return heuristic();
-    }
-
-    try {
-      let systemPrompt = '';
-
-      switch (postType) {
-        case 'event':
-          systemPrompt = `Extract structured data from this event post. Return a JSON object with:
-          {
-            "date": "ISO date string if found",
-            "location": "event location if mentioned",
-            "title": "event title/name if mentioned"
-          }
-          If any field is not found, set it to null.`;
-          break;
-
-        case 'lost_found':
-          systemPrompt = `Extract structured data from this lost/found post. Return a JSON object with:
-          {
-            "itemStatus": "lost" or "found",
-            "itemName": "name/description of the item",
-            "location": "where it was lost/found"
-          }
-          If any field is not found, set it to null.`;
-          break;
-
-        case 'announcement':
-          systemPrompt = `Extract structured data from this announcement post. Return a JSON object with:
-          {
-            "department": "issuing department if mentioned",
-            "deadline": "ISO date string if any deadline mentioned",
-            "priority": "high", "medium", or "low" based on urgency indicators
-          }
-          If any field is not found, set it to null.`;
-          break;
-
-        default:
-          return {};
-      }
-
-      const client = new OpenAI({ apiKey });
-      const response = await client.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content: systemPrompt
-          },
-          {
-            role: "user",
-            content: content
-          }
-        ],
-        max_tokens: 200,
-        temperature: 0.1
-      });
-
+    
+    // --- Secondary Strategy: OpenAI ---
+    if (apiKey) {
       try {
+        let systemPrompt = '';
+        switch (postType) {
+          case 'event': systemPrompt = `Extract event data. Return JSON with keys: "date", "location", "title". Use null for missing fields.`; break;
+          case 'lost_found': systemPrompt = `Extract lost/found data. Return JSON with keys: "itemStatus" ("lost" or "found"), "itemName", "location". Use null for missing fields.`; break;
+          case 'announcement': systemPrompt = `Extract announcement data. Return JSON with keys: "department", "deadline", "priority" ("high", "medium", "low"). Use null for missing fields.`; break;
+          default: return {};
+        }
+
+        const client = new OpenAI({ apiKey });
+        const response = await client.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          response_format: { type: "json_object" }, // Use JSON mode for reliability
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: content }
+          ],
+          max_tokens: 200,
+          temperature: 0.1
+        });
         return JSON.parse(response.choices[0].message.content.trim());
-      } catch (parseError) {
-        console.error('Error parsing extracted entities:', parseError);
-        return heuristic();
+      } catch (error) {
+        console.error('OpenAI entity extraction failed, falling back to heuristic:', error);
       }
-    } catch (error) {
-      console.error('Error extracting entities (OpenAI):', error);
-      return heuristic();
     }
+
+    // --- Fallback Strategy: Heuristic ---
+    return heuristic();
   }
 
   async generatePost(prompt, apiKey) {
-    // Prefer Gemini when available
+    // --- Primary Strategy: Gemini ---
     const geminiKey = process.env.GEMINI_API_KEY;
     if (geminiKey) {
       try {
         const genAI = new GoogleGenerativeAI(geminiKey);
         const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const result = await model.generateContent(`Generate an engaging campus post about: ${prompt}`);
-        return (await result.response.text()).trim();
+
+        // FIX: Correctly access the text response from the Gemini SDK.
+        const response = result.response;
+        return response.text().trim(); // Success.
       } catch (e) {
-        console.error('Gemini generate error:', e.message || e);
+        console.error('Gemini post generation failed, falling back:', e.message || e);
       }
     }
 
-    if (!apiKey) {
-      // Heuristic fallback generation
-      return `📢 ${prompt}\n\nShare your thoughts and join the conversation below! #CampusLife`;
+    // --- Secondary Strategy: OpenAI ---
+    if (apiKey) {
+      try {
+        const client = new OpenAI({ apiKey });
+        const response = await client.chat.completions.create({
+          model: "gpt-3.5-turbo",
+          messages: [
+            { role: "system", content: `You are a campus social media assistant. Generate engaging posts.` },
+            { role: "user", content: `Generate a campus post about: ${prompt}` }
+          ],
+          max_tokens: 300,
+          temperature: 0.7
+        });
+        return response.choices[0].message.content.trim();
+      } catch (error) {
+        console.error('OpenAI post generation failed, falling back:', error);
+      }
     }
 
-    try {
-      const client = new OpenAI({ apiKey });
-      const response = await client.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          { role: "system", content: `You are a campus social media assistant. Generate engaging posts for a campus feed.` },
-          { role: "user", content: `Generate a campus post about: ${prompt}` }
-        ],
-        max_tokens: 300,
-        temperature: 0.7
-      });
-      return response.choices[0].message.content.trim();
-    } catch (error) {
-      console.error('Error generating post (OpenAI):', error);
-      // Fallback graceful content
-      return `📢 ${prompt}\n\nShare your thoughts and join the conversation below! #CampusLife`;
-    }
+    // --- Fallback Strategy: Heuristic Template ---
+    return `📢 ${prompt}\n\nShare your thoughts and join the conversation below! #CampusLife`;
   }
 }
 
