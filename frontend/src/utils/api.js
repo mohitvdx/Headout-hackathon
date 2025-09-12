@@ -18,27 +18,38 @@ const handleResponse = async (response) => {
 
 export const api = {
   // Post detection
-  detectPostType: async (content, apiKey) => {
+  detectPostType: async (content) => {
     const response = await fetch(`${API_BASE_URL}/posts/detect-type`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ content, apiKey }),
+      body: JSON.stringify({ content }),
     });
-    return handleResponse(response);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(error.error || 'Failed to detect post type', response.status);
+    }
+
+    return response.json();
   },
 
-  // Post generation
-  generatePost: async (prompt, apiKey) => {
+  generatePost: async (prompt) => {
     const response = await fetch(`${API_BASE_URL}/posts/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt, apiKey }),
+      body: JSON.stringify({ prompt }),
     });
-    return handleResponse(response);
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new ApiError(error.error || 'Failed to generate post', response.status);
+    }
+
+    return response.json();
   },
 
   // Posts CRUD

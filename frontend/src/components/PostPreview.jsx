@@ -52,52 +52,39 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-amber-200/50 p-6 hover:shadow-xl transition-all duration-300">
       <div className="mb-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold text-gray-900">Post Preview</h3>
-          <div className="flex items-center space-x-2">
-            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPostTypeColor(post.type)}`}>
-              <span className="mr-1">{getPostTypeIcon(post.type)}</span>
-              {post.type.charAt(0).toUpperCase() + post.type.slice(1)}
-            </span>
-          </div>
-        </div>
+        <h2 className="text-xl font-semibold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent mb-2">Does everything look good?</h2>
+        <p className="text-amber-700/70 text-sm">Review your post before publishing</p>
         
-        <p className="text-sm text-gray-600 mb-4">
-          Does everything look good? You can edit the content before publishing.
-        </p>
       </div>
 
       {/* Post Content */}
       <div className="mb-6">
         <div className="flex items-start space-x-3">
-          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-            <span className="text-gray-600 font-medium">U</span>
+          <div className="w-10 h-10 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+            <span className="text-white font-semibold">U</span>
           </div>
           <div className="flex-1">
-            <div className="bg-gray-50 rounded-lg p-4">
+            <div className="bg-amber-50/50 backdrop-blur-sm rounded-xl p-4 border border-amber-200/30">
               {isEditing ? (
                 <div>
                   <textarea
                     value={editedContent}
                     onChange={(e) => setEditedContent(e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    className="w-full border border-amber-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent resize-none bg-white/70 backdrop-blur-sm"
                     rows={6}
                   />
                   <div className="flex justify-end space-x-2 mt-3">
                     <button
-                      onClick={() => {
-                        setIsEditing(false)
-                        setEditedContent(post.content)
-                      }}
-                      className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+                      onClick={() => setIsEditing(false)}
+                      className="px-3 py-1 text-amber-600 hover:text-amber-700 transition-colors text-sm font-medium"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleSaveEdit}
-                      className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+                      className="px-4 py-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-lg hover:from-amber-600 hover:to-yellow-600 transition-all duration-200 text-sm font-medium shadow-md"
                     >
                       Save
                     </button>
@@ -105,10 +92,10 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
                 </div>
               ) : (
                 <div>
-                  <p className="text-gray-900 whitespace-pre-wrap">{editedContent}</p>
+                  <p className="text-amber-900 whitespace-pre-wrap">{editedContent}</p>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="mt-2 text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                    className="text-amber-600 hover:text-amber-700 text-sm mt-2 transition-colors font-medium"
                   >
                     Edit content
                   </button>
@@ -123,14 +110,14 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
       <div className="flex justify-between">
         <button
           onClick={onRestart}
-          className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors border border-gray-300 rounded-md"
+          className="px-4 py-2 text-amber-600 hover:text-amber-700 transition-colors font-medium"
         >
           Nah! Restart flow
         </button>
         <button
           onClick={handlePublish}
           disabled={isEditing}
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-medium"
+          className="px-6 py-2 bg-gradient-to-r from-amber-500 to-yellow-500 text-white rounded-full hover:from-amber-600 hover:to-yellow-600 transition-all duration-200 font-medium shadow-md hover:shadow-lg"
         >
           Looks good! Post it
         </button>

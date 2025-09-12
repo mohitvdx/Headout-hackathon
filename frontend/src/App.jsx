@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import PostInput from './components/PostInput'
 import PostPreview from './components/PostPreview'
 import PostCard from './components/PostCard'
-import Settings from './components/Settings'
 import ErrorBoundary from './components/ErrorBoundary'
 import Toast from './components/Toast'
 import LoadingSpinner from './components/LoadingSpinner'
@@ -12,7 +11,6 @@ import './App.css'
 
 function App() {
   const [posts, setPosts] = useState([])
-  const [showSettings, setShowSettings] = useState(false)
   const [currentPost, setCurrentPost] = useState(null)
   const [showPreview, setShowPreview] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -39,22 +37,17 @@ function App() {
     }
   }
 
-  const handlePostSubmit = async (postContent) => {
+  const handleSubmit = async (content) => {
     try {
-      const apiKey = localStorage.getItem('openai_api_key')
+      setLoading(true)
       
-      if (!apiKey) {
-        showError('Please configure your OpenAI API key in settings first')
-        setShowSettings(true)
-        return
-      }
-
-      const result = await api.detectPostType(postContent, apiKey)
+      // First detect the post type
+      const typeResponse = await api.detectPostType(content)
       
       setCurrentPost({
-        content: postContent,
-        type: result.data.type,
-        timestamp: result.data.timestamp
+        content: content,
+        type: typeResponse.data.type,
+        timestamp: typeResponse.data.timestamp
       })
       setShowPreview(true)
       showSuccess(`Post classified as: ${result.data.type}`)
@@ -117,28 +110,26 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50">
         {/* Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200">
-          <div className="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 className="text-2xl font-semibold text-gray-900">Professional Network</h1>
-            <button
-              onClick={() => setShowSettings(true)}
-              className="p-2 text-gray-600 hover:text-gray-800 transition-colors"
-              title="Settings"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            </button>
+        <div className="max-w-2xl mx-auto py-8 px-4">
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-yellow-600 bg-clip-text text-transparent">
+                Professional Network
+              </h1>
+              <p className="text-amber-700/70 text-sm mt-1">Share your professional journey with AI assistance</p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <div className="w-8 h-8 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full flex items-center justify-center">
+                <span className="text-white font-semibold text-sm">✨</span>
+              </div>
+            </div>
           </div>
-        </header>
 
-        {/* Main Content */}
-        <main className="max-w-4xl mx-auto px-4 py-6">
+          {/* Main Content */}
           {!showPreview ? (
-            <PostInput onSubmit={handlePostSubmit} />
+            <PostInput onSubmit={handleSubmit} />
           ) : (
             <PostPreview 
               post={currentPost}
@@ -150,7 +141,7 @@ function App() {
           {/* Posts Feed */}
           <div className="mt-6 space-y-4">
             {loading ? (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-amber-200/50 p-6">
                 <LoadingSpinner text="Loading posts..." />
               </div>
             ) : posts.length > 0 ? (
@@ -162,29 +153,23 @@ function App() {
                 />
               ))
             ) : !showPreview && (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <p className="text-gray-500 text-center">Your posts will appear here</p>
+              <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-amber-200/50 p-6">
+                <p className="text-amber-700/70 text-center">Your posts will appear here</p>
               </div>
             )}
           </div>
-        </main>
 
-        {/* Settings Modal */}
-        <Settings 
-          isOpen={showSettings} 
-          onClose={() => setShowSettings(false)} 
-        />
-
-        {/* Toast Notifications */}
-        {toasts.map((toast) => (
-          <Toast
-            key={toast.id}
-            message={toast.message}
-            type={toast.type}
-            duration={toast.duration}
-            onClose={() => hideToast(toast.id)}
-          />
-        ))}
+          {/* Toast Notifications */}
+          {toasts.map((toast) => (
+            <Toast
+              key={toast.id}
+              message={toast.message}
+              type={toast.type}
+              duration={toast.duration}
+              onClose={() => hideToast(toast.id)}
+            />
+          ))}
+        </div>
       </div>
     </ErrorBoundary>
   )

@@ -4,7 +4,7 @@ const Post = require('../models/Post');
 class PostController {
   async detectPostType(req, res) {
     try {
-      const { content, apiKey } = req.body;
+      const { content } = req.body;
       
       if (!content || !content.trim()) {
         return res.status(400).json({
@@ -12,13 +12,7 @@ class PostController {
         });
       }
 
-      if (!apiKey || !apiKey.trim()) {
-        return res.status(400).json({
-          error: 'API key is required'
-        });
-      }
-
-      const postType = await openaiService.detectPostType(content, apiKey);
+      const postType = await openaiService.detectPostType(content);
       
       res.json({
         success: true,
@@ -38,7 +32,7 @@ class PostController {
 
   async generatePost(req, res) {
     try {
-      const { prompt, apiKey } = req.body;
+      const { prompt } = req.body;
       
       if (!prompt || !prompt.trim()) {
         return res.status(400).json({
@@ -46,13 +40,7 @@ class PostController {
         });
       }
 
-      if (!apiKey || !apiKey.trim()) {
-        return res.status(400).json({
-          error: 'API key is required'
-        });
-      }
-
-      const generatedContent = await openaiService.generatePost(prompt, apiKey);
+      const generatedContent = await openaiService.generatePost(prompt);
       
       res.json({
         success: true,

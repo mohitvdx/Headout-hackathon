@@ -63,66 +63,66 @@ const PostCard = ({ post, onRSVP }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+    <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-lg border border-amber-200/50 p-6 hover:shadow-xl transition-all duration-300">
       <div className="flex items-start space-x-3">
-        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-          <span className="text-gray-600 font-medium">U</span>
+        {/* Profile Avatar */}
+        <div className="w-10 h-10 bg-gradient-to-r from-amber-400 to-yellow-400 rounded-full flex items-center justify-center flex-shrink-0 shadow-md">
+          <span className="text-white font-semibold">U</span>
         </div>
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
-            <span className="font-medium text-gray-900">You</span>
-            <span className="text-gray-500 text-sm">
+            <span className="font-medium text-amber-900">You</span>
+            <span className="text-amber-700/70 text-sm">
               {new Date(post.timestamp).toLocaleString()}
             </span>
-            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getPostTypeColor(post.type)}`}>
+            <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gradient-to-r from-amber-100 to-yellow-100 text-amber-700 border border-amber-200">
               <span className="mr-1">{getPostTypeIcon(post.type)}</span>
               {post.type.charAt(0).toUpperCase() + post.type.slice(1)}
             </span>
           </div>
-          <p className="text-gray-900 whitespace-pre-wrap mb-4">{post.content}</p>
+          <p className="text-amber-900 whitespace-pre-wrap mb-4">{post.content}</p>
           
           {/* RSVP Section for Event Posts */}
           {post.type === 'event' && (
-            <div className="border-t border-gray-200 pt-4">
+            <div className="border-t border-amber-200/50 pt-4">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-sm font-medium text-gray-700">Will you attend?</span>
-                <div className="flex items-center space-x-4 text-xs text-gray-500">
+                <span className="text-sm font-medium text-amber-700">Will you attend?</span>
+                <div className="flex items-center space-x-4 text-xs text-amber-600/70">
                   <span>{rsvpCounts.going} going</span>
                   <span>{rsvpCounts.maybe} maybe</span>
                   <span>{rsvpCounts.notGoing} not going</span>
                 </div>
               </div>
-              
               <div className="flex space-x-2">
                 <button
                   onClick={() => handleRSVP('going')}
-                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                    rsvpStatus === 'going'
-                      ? 'bg-green-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-green-100 hover:text-green-700'
+                  className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    rsvpStatus === 'going' 
+                      ? 'bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 border border-green-200 shadow-md' 
+                      : 'bg-amber-50/50 text-amber-700 hover:bg-amber-100/50 border border-amber-200/50'
                   }`}
                 >
                   ✓ Going
                 </button>
                 <button
                   onClick={() => handleRSVP('maybe')}
-                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                    rsvpStatus === 'maybe'
-                      ? 'bg-yellow-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-yellow-100 hover:text-yellow-700'
+                  className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    rsvpStatus === 'maybe' 
+                      ? 'bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-700 border border-yellow-200 shadow-md' 
+                      : 'bg-amber-50/50 text-amber-700 hover:bg-amber-100/50 border border-amber-200/50'
                   }`}
                 >
                   ? Maybe
                 </button>
                 <button
                   onClick={() => handleRSVP('notGoing')}
-                  className={`flex-1 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                    rsvpStatus === 'notGoing'
-                      ? 'bg-red-600 text-white'
-                      : 'bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-700'
+                  className={`flex-1 py-2 px-3 rounded-xl text-sm font-medium transition-all duration-200 ${
+                    rsvpStatus === 'notGoing' 
+                      ? 'bg-gradient-to-r from-red-100 to-rose-100 text-red-700 border border-red-200 shadow-md' 
+                      : 'bg-amber-50/50 text-amber-700 hover:bg-amber-100/50 border border-amber-200/50'
                   }`}
                 >
-                  ✗ Not going
+                  ✗ Not Going
                 </button>
               </div>
             </div>
@@ -130,51 +130,40 @@ const PostCard = ({ post, onRSVP }) => {
 
           {/* Poll Section for Poll Posts */}
           {post.type === 'poll' && (
-            <div className="border-t border-gray-200 pt-4">
+            <div className="border-t border-amber-200/50 pt-4">
               <div className="space-y-2">
-                <div className="text-sm font-medium text-gray-700 mb-2">Cast your vote:</div>
-                <button className="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Option A</span>
-                    <span className="text-xs text-gray-500">45%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{width: '45%'}}></div>
-                  </div>
-                </button>
-                <button className="w-full text-left p-3 border border-gray-200 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm">Option B</span>
-                    <span className="text-xs text-gray-500">55%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{width: '55%'}}></div>
-                  </div>
-                </button>
+                <div className="text-sm font-medium text-amber-700 mb-2">Cast your vote:</div>
+                <div className="bg-amber-50/50 backdrop-blur-sm rounded-xl p-3 border border-amber-200/30">
+                  <div className="text-sm text-amber-600/70">Poll options would appear here</div>
+                </div>
               </div>
             </div>
           )}
 
           {/* Engagement Actions */}
-          <div className="flex items-center space-x-6 mt-4 pt-3 border-t border-gray-100">
-            <button className="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L9 6v4m-2 4h2m0 0h2m-2 0v2m0-2v-2" />
-              </svg>
-              <span className="text-sm">Like</span>
-            </button>
-            <button className="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-              </svg>
-              <span className="text-sm">Comment</span>
-            </button>
-            <button className="flex items-center space-x-1 text-gray-500 hover:text-blue-600 transition-colors">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-              </svg>
-              <span className="text-sm">Share</span>
-            </button>
+          <div className="border-t border-amber-200/50 pt-3 mt-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-6">
+                <button className="flex items-center space-x-1 text-amber-600 hover:text-amber-700 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                  </svg>
+                  <span className="text-sm font-medium">Like</span>
+                </button>
+                <button className="flex items-center space-x-1 text-amber-600 hover:text-amber-700 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                  <span className="text-sm font-medium">Comment</span>
+                </button>
+                <button className="flex items-center space-x-1 text-amber-600 hover:text-amber-700 transition-colors">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+                  </svg>
+                  <span className="text-sm font-medium">Share</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

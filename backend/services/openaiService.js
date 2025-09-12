@@ -2,23 +2,24 @@ const OpenAI = require('openai');
 
 class OpenAIService {
   constructor() {
-    // We'll create clients dynamically with API keys from requests
-  }
-
-  createClient(apiKey) {
-    if (!apiKey) {
-      throw new Error('OpenAI API key is required');
+    if (!process.env.OPENAI_API_KEY) {
+      console.warn('OpenAI API key not found in environment variables. AI features will be disabled.');
+      this.client = null;
+      return;
     }
-    return new OpenAI({
-      apiKey: apiKey,
+    
+    this.client = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
     });
   }
 
-  async detectPostType(content, apiKey) {
-    const client = this.createClient(apiKey);
+  async detectPostType(content) {
+    if (!this.client) {
+      throw new Error('OpenAI service not configured');
+    }
 
     try {
-      const response = await client.chat.completions.create({
+      const response = await this.client.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {
@@ -57,11 +58,13 @@ class OpenAIService {
     }
   }
 
-  async generatePost(prompt, apiKey) {
-    const client = this.createClient(apiKey);
+  async generatePost(prompt) {
+    if (!this.client) {
+      throw new Error('OpenAI service not configured');
+    }
 
     try {
-      const response = await client.chat.completions.create({
+      const response = await this.client.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {
