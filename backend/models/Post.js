@@ -9,8 +9,8 @@ const postSchema = new mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ['text', 'event', 'poll', 'announcement', 'job', 'achievement'],
-    default: 'text'
+    enum: ['event', 'lost_found', 'announcement'],
+    default: 'event'
   },
   author: {
     type: String,
@@ -30,6 +30,24 @@ const postSchema = new mongoose.Schema({
       date: Date,
       location: String,
       rsvpDeadline: Date
+    },
+    lostFoundDetails: {
+      itemStatus: String, // 'lost' or 'found'
+      itemName: String,
+      location: String,
+      contactInfo: String,
+      imageUrl: String
+    },
+    announcementDetails: {
+      department: String,
+      attachmentUrl: String,
+      attachmentType: String // 'image' or 'pdf'
+    },
+    extractedEntities: {
+      dates: [Date],
+      locations: [String],
+      people: [String],
+      organizations: [String]
     }
   },
   likes: {

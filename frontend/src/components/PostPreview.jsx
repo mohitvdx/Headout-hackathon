@@ -8,14 +8,10 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
     switch (type) {
       case 'event':
         return '📅'
-      case 'poll':
-        return '📊'
+      case 'lost_found':
+        return '🔍'
       case 'announcement':
         return '📢'
-      case 'job':
-        return '💼'
-      case 'achievement':
-        return '🏆'
       default:
         return '📝'
     }
@@ -24,17 +20,13 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
   const getPostTypeColor = (type) => {
     switch (type) {
       case 'event':
-        return 'bg-green-100 text-green-800'
-      case 'poll':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-emerald-100 text-emerald-800'
+      case 'lost_found':
+        return 'bg-amber-100 text-amber-800'
       case 'announcement':
-        return 'bg-blue-100 text-blue-800'
-      case 'job':
-        return 'bg-orange-100 text-orange-800'
-      case 'achievement':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-indigo-100 text-indigo-800'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-slate-100 text-slate-800'
     }
   }
 
@@ -105,6 +97,22 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
           </div>
         </div>
       </div>
+
+      {/* Extracted Entities Preview */}
+      {post.extractedEntities && Object.keys(post.extractedEntities).length > 0 && (
+        <div className="mb-6 border-t border-slate-200 pt-4">
+          <h3 className="text-lg font-semibold text-slate-800 mb-2">AI has extracted these details:</h3>
+          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2">
+            {Object.entries(post.extractedEntities).map(([key, value]) => value && (
+              <div key={key} className="flex text-sm">
+                <span className="font-medium text-slate-600 w-28 capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
+                <span className="text-slate-800 font-semibold">{value}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500 mt-2">You can edit these details after publishing.</p>
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex justify-between">

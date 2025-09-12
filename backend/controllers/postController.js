@@ -13,12 +13,14 @@ class PostController {
       }
 
       const postType = await openaiService.detectPostType(content);
+      const extractedEntities = await openaiService.extractEntities(content, postType);
       
       res.json({
         success: true,
         data: {
           content,
           type: postType,
+          extractedEntities,
           timestamp: new Date().toISOString()
         }
       });
@@ -60,7 +62,7 @@ class PostController {
 
   async createPost(req, res) {
     try {
-      const { content, type, author = 'Anonymous User' } = req.body;
+      const { content, type, author = 'Anonymous User', extractedEntities } = req.body;
       
       if (!content || !content.trim()) {
         return res.status(400).json({
@@ -68,12 +70,50 @@ class PostController {
         });
       }
 
-      const post = new Post({
+      const postData = {
         content: content.trim(),
-        type: type || 'text',
-        author
-      });
+        type: type || 'announcement',
+        author,
+        metadata: {}
+      };
 
+      // Add extracted entities to metadata based on post type
+      if (extractedEntities) {
+        switch (type) {
+          case 'event':
+            if (extractedEntities.date || extractedEntities.location || extractedEntities.title) {
+              postData.metadata.eventDetails = {
+                date: extractedEntities.date ? new Date(extractedEntities.date) : null,
+                location: extractedEntities.location || null,
+                title: extractedEntities.title || null
+              };
+            }
+            postData.metadata.rsvpCounts = { going: 0, maybe: 0, notGoing: 0 };
+            break;
+            
+          case 'lost_found':
+            if (extractedEntities.itemStatus || extractedEntities.itemName || extractedEntities.location) {
+              postData.metadata.lostFoundDetails = {
+                itemStatus: extractedEntities.itemStatus || null,
+                itemName: extractedEntities.itemName || null,
+                location: extractedEntities.location || null
+              };
+            }
+            break;
+            
+          case 'announcement':
+            if (extractedEntities.department || extractedEntities.deadline || extractedEntities.priority) {
+              postData.metadata.announcementDetails = {
+                department: extractedEntities.department || null,
+                deadline: extractedEntities.deadline ? new Date(extractedEntities.deadline) : null,
+                priority: extractedEntities.priority || 'medium'
+              };
+            }
+            break;
+        }
+      }
+
+      const post = new Post(postData);
       const savedPost = await post.save();
       
       res.status(201).json({

@@ -47,10 +47,11 @@ function App() {
       setCurrentPost({
         content: content,
         type: typeResponse.data.type,
+        extractedEntities: typeResponse.data.extractedEntities,
         timestamp: typeResponse.data.timestamp
       })
       setShowPreview(true)
-      showSuccess(`Post classified as: ${result.data.type}`)
+      showSuccess(`Post classified as: ${typeResponse.data.type}`)
     } catch (error) {
       console.error('Error submitting post:', error)
       if (error instanceof ApiError) {
@@ -71,7 +72,8 @@ function App() {
       const result = await api.createPost({
         content: post.content,
         type: post.type,
-        author: 'You'
+        author: 'You',
+        extractedEntities: post.extractedEntities
       })
       
       setPosts(prevPosts => [result.data, ...prevPosts])

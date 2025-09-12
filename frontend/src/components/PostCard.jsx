@@ -12,14 +12,10 @@ const PostCard = ({ post, onRSVP }) => {
     switch (type) {
       case 'event':
         return '📅'
-      case 'poll':
-        return '📊'
+      case 'lost_found':
+        return '🔍'
       case 'announcement':
         return '📢'
-      case 'job':
-        return '💼'
-      case 'achievement':
-        return '🏆'
       default:
         return '📝'
     }
@@ -28,17 +24,13 @@ const PostCard = ({ post, onRSVP }) => {
   const getPostTypeColor = (type) => {
     switch (type) {
       case 'event':
-        return 'bg-green-100 text-green-800'
-      case 'poll':
-        return 'bg-purple-100 text-purple-800'
+        return 'bg-emerald-100 text-emerald-800'
+      case 'lost_found':
+        return 'bg-amber-100 text-amber-800'
       case 'announcement':
-        return 'bg-blue-100 text-blue-800'
-      case 'job':
-        return 'bg-orange-100 text-orange-800'
-      case 'achievement':
-        return 'bg-yellow-100 text-yellow-800'
+        return 'bg-indigo-100 text-indigo-800'
       default:
-        return 'bg-gray-100 text-gray-800'
+        return 'bg-slate-100 text-slate-800'
     }
   }
 
@@ -81,6 +73,36 @@ const PostCard = ({ post, onRSVP }) => {
             </span>
           </div>
           <p className="text-slate-900 whitespace-pre-wrap mb-4">{post.content}</p>
+
+          {/* Lost & Found Details */}
+          {post.type === 'lost_found' && post.metadata?.lostFoundDetails && (
+            <div className="border-t border-slate-200 pt-4 mt-4">
+              <div className="flex items-center space-x-4">
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
+                  post.metadata.lostFoundDetails.itemStatus === 'lost' 
+                    ? 'bg-rose-100 text-rose-800' 
+                    : 'bg-emerald-100 text-emerald-800'
+                }`}>
+                  {post.metadata.lostFoundDetails.itemStatus?.toUpperCase()}
+                </span>
+                <div>
+                  <p className="font-medium text-slate-800">{post.metadata.lostFoundDetails.itemName}</p>
+                  {post.metadata.lostFoundDetails.location && (
+                    <p className="text-sm text-slate-500">Last seen: {post.metadata.lostFoundDetails.location}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Announcement Details */}
+          {post.type === 'announcement' && post.metadata?.announcementDetails && (
+            <div className="border-t border-slate-200 pt-4 mt-4 bg-slate-50/80 rounded-lg p-3">
+              <p className="text-sm font-semibold text-slate-700">
+                From: <span className="font-medium text-indigo-700">{post.metadata.announcementDetails.department}</span>
+              </p>
+            </div>
+          )}
           
           {/* RSVP Section for Event Posts */}
           {post.type === 'event' && (
@@ -124,18 +146,6 @@ const PostCard = ({ post, onRSVP }) => {
                 >
                   ✗ Not Going
                 </button>
-              </div>
-            </div>
-          )}
-
-          {/* Poll Section for Poll Posts */}
-          {post.type === 'poll' && (
-            <div className="border-t border-slate-200 pt-4">
-              <div className="space-y-2">
-                <div className="text-sm font-medium text-slate-700 mb-2">Cast your vote:</div>
-                <div className="bg-slate-50 rounded-lg p-3 border border-slate-200">
-                  <div className="text-sm text-slate-500">Poll options would appear here</div>
-                </div>
               </div>
             </div>
           )}
