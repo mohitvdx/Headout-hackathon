@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import PostInput from './components/PostInput'
+import PostPreview from './components/PostPreview'
 import Settings from './components/Settings'
 import './App.css'
 
 function App() {
   const [posts, setPosts] = useState([])
   const [showSettings, setShowSettings] = useState(false)
+  const [currentPost, setCurrentPost] = useState(null)
+  const [showPreview, setShowPreview] = useState(false)
 
   const handlePostSubmit = async (postContent) => {
     try {
@@ -33,9 +36,12 @@ function App() {
       const result = await response.json()
       
       if (result.success) {
-        console.log('Post classified as:', result.data.type)
-        // For now, just log the result - will implement preview later
-        alert(`Post detected as: ${result.data.type}`)
+        setCurrentPost({
+          content: postContent,
+          type: result.data.type,
+          timestamp: result.data.timestamp
+        })
+        setShowPreview(true)
       } else {
         console.error('Error:', result.error)
         alert('Error processing post: ' + result.error)
@@ -44,6 +50,18 @@ function App() {
       console.error('Error submitting post:', error)
       alert('Error connecting to server')
     }
+  }
+
+  const handleRestart = () => {
+    setCurrentPost(null)
+    setShowPreview(false)
+  }
+
+  const handlePublish = (post) => {
+    // Add to posts feed
+    setPosts(prevPosts => [post, ...prevPosts])
+    setCurrentPost(null)
+    setShowPreview(false)
   }
 
   return (
@@ -67,13 +85,52 @@ function App() {
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 py-6">
-        <PostInput onSubmit={handlePostSubmit} />
+        {!showPreview ? (
+          <PostInput onSubmit={handlePostSubmit} />
+        ) : (
+          <PostPreview 
+            post={currentPost}
+            onRestart={handleRestart}
+            onPublish={handlePublish}
+          />
+        )}
         
-        {/* Feed will be implemented later */}
-        <div className="mt-6">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <p className="text-gray-500 text-center">Your posts will appear here</p>
-          </div>
+        {/* Posts Feed */}
+        <div className="mt-6 space-y-4">
+          {posts.length > 0 ? (
+            posts.map((post, index) => (
+              <div key={index} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="flex items-start space-x-3">
+                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-gray-600 font-medium">U</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-2 mb-2">
+                      <span className="font-medium text-gray-900">You</span>
+                      <span className="text-gray-500 text-sm">
+                        {new Date(post.timestamp).toLocaleString()}
+                      </span>
+                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                        post.type === 'event' ? 'bg-green-100 text-green-800' :
+                        post.type === 'poll' ? 'bg-purple-100 text-purple-800' :
+                        post.type === 'announcement' ? 'bg-blue-100 text-blue-800' :
+                        post.type === 'job' ? 'bg-orange-100 text-orange-800' :
+                        post.type === 'achievement' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {post.type}
+                      </span>
+                    </div>
+                    <p className="text-gray-900 whitespace-pre-wrap">{post.content}</p>
+                  </div>
+                </div>
+              </div>
+            ))
+          ) : !showPreview && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <p className="text-gray-500 text-center">Your posts will appear here</p>
+            </div>
+          )}
         </div>
       </main>
 
