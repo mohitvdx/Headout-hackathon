@@ -88,7 +88,7 @@ class PostController {
                 title: extractedEntities.title || null
               };
             }
-            postData.metadata.rsvpCounts = { going: 0, maybe: 0, notGoing: 0 };
+            postData.metadata.rsvpCounts = { going: 0, interested: 0, notGoing: 0 };
             break;
             
           case 'lost_found':
@@ -151,7 +151,7 @@ class PostController {
       const { postId } = req.params;
       const { status } = req.body;
       
-      if (!['going', 'maybe', 'notGoing'].includes(status)) {
+      if (!['going', 'interested', 'notGoing'].includes(status)) {
         return res.status(400).json({
           error: 'Invalid RSVP status'
         });
@@ -172,10 +172,10 @@ class PostController {
 
       // Initialize metadata if it doesn't exist
       if (!post.metadata) {
-        post.metadata = { rsvpCounts: { going: 0, maybe: 0, notGoing: 0 } };
+        post.metadata = { rsvpCounts: { going: 0, interested: 0, notGoing: 0 } };
       }
       if (!post.metadata.rsvpCounts) {
-        post.metadata.rsvpCounts = { going: 0, maybe: 0, notGoing: 0 };
+        post.metadata.rsvpCounts = { going: 0, interested: 0, notGoing: 0 };
       }
 
       // Increment the RSVP count

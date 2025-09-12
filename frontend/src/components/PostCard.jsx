@@ -3,9 +3,9 @@ import { useState } from 'react'
 const PostCard = ({ post, onRSVP }) => {
   const [rsvpStatus, setRsvpStatus] = useState(null)
   const [rsvpCounts, setRsvpCounts] = useState({
-    going: Math.floor(Math.random() * 20) + 5,
-    maybe: Math.floor(Math.random() * 10) + 2,
-    notGoing: Math.floor(Math.random() * 5) + 1
+    going: post.metadata?.rsvpCounts?.going ?? 0,
+    interested: post.metadata?.rsvpCounts?.interested ?? 0,
+    notGoing: post.metadata?.rsvpCounts?.notGoing ?? 0
   })
 
   const getPostTypeIcon = (type) => {
@@ -111,7 +111,7 @@ const PostCard = ({ post, onRSVP }) => {
                 <span className="text-sm font-medium text-slate-700">Will you attend?</span>
                 <div className="flex items-center space-x-4 text-xs text-slate-500">
                   <span>{rsvpCounts.going} going</span>
-                  <span>{rsvpCounts.maybe} maybe</span>
+                  <span>{rsvpCounts.interested} interested</span>
                   <span>{rsvpCounts.notGoing} not going</span>
                 </div>
               </div>
@@ -127,14 +127,14 @@ const PostCard = ({ post, onRSVP }) => {
                   ✓ Going
                 </button>
                 <button
-                  onClick={() => handleRSVP('maybe')}
+                  onClick={() => handleRSVP('interested')}
                   className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    rsvpStatus === 'maybe'
+                    rsvpStatus === 'interested'
                       ? 'bg-amber-500 text-white shadow-md'
                       : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                   }`}
                 >
-                  ? Maybe
+                  ☆ Interested
                 </button>
                 <button
                   onClick={() => handleRSVP('notGoing')}

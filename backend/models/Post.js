@@ -19,7 +19,7 @@ const postSchema = new mongoose.Schema({
   metadata: {
     rsvpCounts: {
       going: { type: Number, default: 0 },
-      maybe: { type: Number, default: 0 },
+      interested: { type: Number, default: 0 },
       notGoing: { type: Number, default: 0 }
     },
     pollOptions: [{
