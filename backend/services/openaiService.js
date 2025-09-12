@@ -1,4 +1,5 @@
 const OpenAI = require('openai');
+const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 class OpenAIService {
   constructor() {
@@ -15,6 +16,21 @@ class OpenAIService {
       if (isEvent) return 'event';
       return 'announcement';
     };
+
+    // Prefer Gemini when available
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+      try {
+        const genAI = new GoogleGenerativeAI(geminiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const prompt = `Classify the following text into one of exactly these three types: event, lost_found, announcement.\nReply with only the type.\n\nText: ${content}`;
+        const result = await model.generateContent(prompt);
+        const text = (await result.response.text()).trim().toLowerCase();
+        if (['event','lost_found','announcement'].includes(text)) return text;
+      } catch (e) {
+        console.error('Gemini classify error:', e.message || e);
+      }
+    }
 
     if (!apiKey) {
       // Heuristic fallback
@@ -45,7 +61,7 @@ class OpenAIService {
       });
 
       const classification = response.choices[0].message.content.trim().toLowerCase();
-      
+
       // Validate the response is one of our expected types
       const validTypes = ['event', 'lost_found', 'announcement'];
       if (validTypes.includes(classification)) {
@@ -54,7 +70,7 @@ class OpenAIService {
         return 'announcement'; // Default fallback
       }
     } catch (error) {
-      console.error('Error detecting post type:', error);
+      console.error('Error detecting post type (OpenAI):', error);
       // Fallback to heuristic instead of failing hard
       return heuristic();
     }
@@ -94,6 +110,38 @@ class OpenAIService {
       return {};
     };
 
+    // Prefer Gemini when available
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+      try {
+        let systemPrompt = '';
+        switch (postType) {
+          case 'event':
+            systemPrompt = 'Extract JSON with keys: date, location, title';
+            break;
+          case 'lost_found':
+            systemPrompt = 'Extract JSON with keys: itemStatus, itemName, location';
+            break;
+          case 'announcement':
+            systemPrompt = 'Extract JSON with keys: department, deadline, priority';
+            break;
+          default:
+            return heuristic();
+        }
+        const genAI = new GoogleGenerativeAI(geminiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const result = await model.generateContent(`${systemPrompt}. Return JSON only without explanation.\nText: ${content}`);
+        const text = (await result.response.text()).trim();
+        try {
+          return JSON.parse(text);
+        } catch (_pe) {
+          return heuristic();
+        }
+      } catch (e) {
+        console.error('Gemini extract error:', e.message || e);
+      }
+    }
+
     if (!apiKey) {
       // Heuristic extraction
       return heuristic();
@@ -101,7 +149,7 @@ class OpenAIService {
 
     try {
       let systemPrompt = '';
-      
+
       switch (postType) {
         case 'event':
           systemPrompt = `Extract structured data from this event post. Return a JSON object with:
@@ -112,7 +160,7 @@ class OpenAIService {
           }
           If any field is not found, set it to null.`;
           break;
-          
+
         case 'lost_found':
           systemPrompt = `Extract structured data from this lost/found post. Return a JSON object with:
           {
@@ -122,7 +170,7 @@ class OpenAIService {
           }
           If any field is not found, set it to null.`;
           break;
-          
+
         case 'announcement':
           systemPrompt = `Extract structured data from this announcement post. Return a JSON object with:
           {
@@ -132,7 +180,7 @@ class OpenAIService {
           }
           If any field is not found, set it to null.`;
           break;
-          
+
         default:
           return {};
       }
@@ -161,14 +209,28 @@ class OpenAIService {
         return heuristic();
       }
     } catch (error) {
-      console.error('Error extracting entities:', error);
+      console.error('Error extracting entities (OpenAI):', error);
       return heuristic();
     }
   }
 
   async generatePost(prompt, apiKey) {
+    // Prefer Gemini when available
+    const geminiKey = process.env.GEMINI_API_KEY;
+    if (geminiKey) {
+      try {
+        const genAI = new GoogleGenerativeAI(geminiKey);
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+        const result = await model.generateContent(`Generate an engaging campus post about: ${prompt}`);
+        return (await result.response.text()).trim();
+      } catch (e) {
+        console.error('Gemini generate error:', e.message || e);
+      }
+    }
+
     if (!apiKey) {
-      throw new Error('OpenAI API key not provided');
+      // Heuristic fallback generation
+      return `📢 ${prompt}\n\nShare your thoughts and join the conversation below! #CampusLife`;
     }
 
     try {
@@ -176,31 +238,17 @@ class OpenAIService {
       const response = await client.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
-          {
-            role: "system",
-            content: `You are a campus social media assistant. Generate engaging posts for a campus feed. 
-            The posts should be:
-            - Appropriate for a campus community
-            - Engaging and likely to generate meaningful interactions
-            - Well-structured with proper formatting
-            - Include relevant hashtags when appropriate
-            - Be authentic and student/faculty-friendly
-            
-            Keep posts concise but impactful (100-250 words typically).`
-          },
-          {
-            role: "user",
-            content: `Generate a campus post about: ${prompt}`
-          }
+          { role: "system", content: `You are a campus social media assistant. Generate engaging posts for a campus feed.` },
+          { role: "user", content: `Generate a campus post about: ${prompt}` }
         ],
         max_tokens: 300,
         temperature: 0.7
       });
-
       return response.choices[0].message.content.trim();
     } catch (error) {
-      console.error('Error generating post:', error);
-      throw new Error('Failed to generate post');
+      console.error('Error generating post (OpenAI):', error);
+      // Fallback graceful content
+      return `📢 ${prompt}\n\nShare your thoughts and join the conversation below! #CampusLife`;
     }
   }
 }

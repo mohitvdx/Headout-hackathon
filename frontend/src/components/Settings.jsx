@@ -21,7 +21,7 @@ const Settings = ({ isOpen, onClose }) => {
       // Save to localStorage (in production, this should be more secure)
       localStorage.setItem('openai_api_key', apiKey)
       setMessage('API key saved successfully!')
-      
+
       setTimeout(() => {
         setMessage('')
         onClose()
@@ -75,11 +75,10 @@ const Settings = ({ isOpen, onClose }) => {
           </div>
 
           {message && (
-            <div className={`p-3 rounded-md text-sm ${
-              message.includes('Error') 
-                ? 'bg-red-100 text-red-700' 
+            <div className={`p-3 rounded-md text-sm ${message.includes('Error')
+                ? 'bg-red-100 text-red-700'
                 : 'bg-green-100 text-green-700'
-            }`}>
+              }`}>
               {message}
             </div>
           )}

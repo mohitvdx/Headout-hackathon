@@ -44,12 +44,15 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
           { key: 'itemStatus', label: 'Status', type: 'select', options: ['lost', 'found'] },
           { key: 'itemName', label: 'Item name', type: 'text' },
           { key: 'location', label: 'Location', type: 'text' },
+          { key: 'imageUrl', label: 'Image URL (optional)', type: 'text' },
         ]
       case 'announcement':
         return [
           { key: 'department', label: 'Department', type: 'text' },
           { key: 'deadline', label: 'Deadline', type: 'datetime-local' },
           { key: 'priority', label: 'Priority', type: 'select', options: ['high', 'medium', 'low'] },
+          { key: 'attachmentUrl', label: 'Attachment URL (optional)', type: 'text' },
+          { key: 'attachmentType', label: 'Attachment Type', type: 'select', options: ['image', 'pdf'] },
         ]
       default:
         return []
