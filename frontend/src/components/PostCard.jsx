@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 const PostCard = ({ post, onRSVP }) => {
   const [rsvpStatus, setRsvpStatus] = useState(null)
@@ -91,6 +91,15 @@ const PostCard = ({ post, onRSVP }) => {
                   )}
                 </div>
               </div>
+              {post.metadata.lostFoundDetails.imageUrl && (
+                <div className="mt-3">
+                  <img
+                    src={post.metadata.lostFoundDetails.imageUrl}
+                    alt={post.metadata.lostFoundDetails.itemName || 'Lost & Found item'}
+                    className="rounded-md border border-slate-200 max-h-56 object-cover"
+                  />
+                </div>
+              )}
             </div>
           )}
 
@@ -100,6 +109,26 @@ const PostCard = ({ post, onRSVP }) => {
               <p className="text-sm font-semibold text-slate-700">
                 From: <span className="font-medium text-indigo-700">{post.metadata.announcementDetails.department}</span>
               </p>
+              {post.metadata.announcementDetails.attachmentUrl && (
+                <div className="mt-3">
+                  {post.metadata.announcementDetails.attachmentType === 'pdf' ? (
+                    <a
+                      href={post.metadata.announcementDetails.attachmentUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center px-3 py-2 text-sm font-medium text-indigo-700 bg-indigo-50 rounded-md hover:bg-indigo-100 border border-indigo-100"
+                    >
+                      📄 View attachment (PDF)
+                    </a>
+                  ) : (
+                    <img
+                      src={post.metadata.announcementDetails.attachmentUrl}
+                      alt="Announcement attachment"
+                      className="rounded-md border border-slate-200 max-h-56 object-cover"
+                    />
+                  )}
+                </div>
+              )}
             </div>
           )}
 
