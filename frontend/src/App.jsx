@@ -7,6 +7,7 @@ import Toast from './components/Toast'
 import LoadingSpinner from './components/LoadingSpinner'
 import { useToast } from './hooks/useToast'
 import { api, ApiError } from './utils/api'
+import Settings from './components/Settings'
 import './App.css'
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
   const [currentPost, setCurrentPost] = useState(null)
   const [showPreview, setShowPreview] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showSettings, setShowSettings] = useState(false)
   const { toasts, showSuccess, showError, hideToast } = useToast()
 
   // Load posts on component mount
@@ -118,14 +120,17 @@ function App() {
           <div className="flex justify-between items-center mb-8">
             <div>
               <h1 className="text-3xl font-bold text-slate-900">
-                Professional Network
+                Campus Feed
               </h1>
-              <p className="text-slate-600 text-sm mt-1">Share your professional journey with AI assistance</p>
+              <p className="text-slate-600 text-sm mt-1">Textbox → AI Preview → Confirmation → Feed</p>
             </div>
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center shadow-md">
-                <span className="text-white font-semibold text-sm">✨</span>
-              </div>
+              <button
+                onClick={() => setShowSettings(true)}
+                className="inline-flex items-center space-x-2 px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
+              >
+                <span className="text-sm font-medium">Settings</span>
+              </button>
             </div>
           </div>
 
@@ -160,6 +165,9 @@ function App() {
               </div>
             )}
           </div>
+
+          {/* Settings Modal */}
+          <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
 
           {/* Toast Notifications */}
           {toasts.map((toast) => (

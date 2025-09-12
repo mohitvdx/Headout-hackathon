@@ -5,7 +5,7 @@ class PostController {
   async detectPostType(req, res) {
     try {
       const { content } = req.body;
-      
+
       if (!content || !content.trim()) {
         return res.status(400).json({
           error: 'Content is required'
@@ -14,7 +14,7 @@ class PostController {
 
       const postType = await openaiService.detectPostType(content);
       const extractedEntities = await openaiService.extractEntities(content, postType);
-      
+
       res.json({
         success: true,
         data: {
@@ -35,7 +35,7 @@ class PostController {
   async generatePost(req, res) {
     try {
       const { prompt } = req.body;
-      
+
       if (!prompt || !prompt.trim()) {
         return res.status(400).json({
           error: 'Prompt is required'
@@ -43,7 +43,7 @@ class PostController {
       }
 
       const generatedContent = await openaiService.generatePost(prompt);
-      
+
       res.json({
         success: true,
         data: {
@@ -63,7 +63,7 @@ class PostController {
   async createPost(req, res) {
     try {
       const { content, type, author = 'Anonymous User', extractedEntities } = req.body;
-      
+
       if (!content || !content.trim()) {
         return res.status(400).json({
           error: 'Content is required'
@@ -74,6 +74,7 @@ class PostController {
         content: content.trim(),
         type: type || 'announcement',
         author,
+        entities: extractedEntities || {},
         metadata: {}
       };
 
@@ -90,7 +91,7 @@ class PostController {
             }
             postData.metadata.rsvpCounts = { going: 0, interested: 0, notGoing: 0 };
             break;
-            
+
           case 'lost_found':
             if (extractedEntities.itemStatus || extractedEntities.itemName || extractedEntities.location) {
               postData.metadata.lostFoundDetails = {
@@ -100,7 +101,7 @@ class PostController {
               };
             }
             break;
-            
+
           case 'announcement':
             if (extractedEntities.department || extractedEntities.deadline || extractedEntities.priority) {
               postData.metadata.announcementDetails = {
@@ -115,7 +116,7 @@ class PostController {
 
       const post = new Post(postData);
       const savedPost = await post.save();
-      
+
       res.status(201).json({
         success: true,
         data: savedPost
@@ -133,7 +134,7 @@ class PostController {
       const posts = await Post.find()
         .sort({ createdAt: -1 })
         .limit(50);
-      
+
       res.json({
         success: true,
         data: posts
@@ -150,7 +151,7 @@ class PostController {
     try {
       const { postId } = req.params;
       const { status } = req.body;
-      
+
       if (!['going', 'interested', 'notGoing'].includes(status)) {
         return res.status(400).json({
           error: 'Invalid RSVP status'
@@ -180,9 +181,9 @@ class PostController {
 
       // Increment the RSVP count
       post.metadata.rsvpCounts[status] += 1;
-      
+
       await post.save();
-      
+
       res.json({
         success: true,
         data: post

@@ -16,6 +16,11 @@ const postSchema = new mongoose.Schema({
     type: String,
     default: 'Anonymous User'
   },
+  // Top-level structured entities extracted by AI
+  entities: {
+    type: mongoose.Schema.Types.Mixed,
+    default: {}
+  },
   metadata: {
     rsvpCounts: {
       going: { type: Number, default: 0 },
@@ -70,7 +75,7 @@ const postSchema = new mongoose.Schema({
 });
 
 // Update the updatedAt field before saving
-postSchema.pre('save', function(next) {
+postSchema.pre('save', function (next) {
   this.updatedAt = Date.now();
   next();
 });

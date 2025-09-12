@@ -37,18 +37,18 @@ const PostCard = ({ post, onRSVP }) => {
   const handleRSVP = (status) => {
     // Update counts based on previous and new status
     const newCounts = { ...rsvpCounts }
-    
+
     // Remove from previous status if any
     if (rsvpStatus) {
       newCounts[rsvpStatus] = Math.max(0, newCounts[rsvpStatus] - 1)
     }
-    
+
     // Add to new status
     newCounts[status] = newCounts[status] + 1
-    
+
     setRsvpCounts(newCounts)
     setRsvpStatus(status)
-    
+
     if (onRSVP) {
       onRSVP(post.id, status)
     }
@@ -78,11 +78,10 @@ const PostCard = ({ post, onRSVP }) => {
           {post.type === 'lost_found' && post.metadata?.lostFoundDetails && (
             <div className="border-t border-slate-200 pt-4 mt-4">
               <div className="flex items-center space-x-4">
-                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-                  post.metadata.lostFoundDetails.itemStatus === 'lost' 
-                    ? 'bg-rose-100 text-rose-800' 
+                <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${post.metadata.lostFoundDetails.itemStatus === 'lost'
+                    ? 'bg-rose-100 text-rose-800'
                     : 'bg-emerald-100 text-emerald-800'
-                }`}>
+                  }`}>
                   {post.metadata.lostFoundDetails.itemStatus?.toUpperCase()}
                 </span>
                 <div>
@@ -103,10 +102,29 @@ const PostCard = ({ post, onRSVP }) => {
               </p>
             </div>
           )}
-          
-          {/* RSVP Section for Event Posts */}
+
+          {/* Event Details + RSVP for Event Posts */}
           {post.type === 'event' && (
             <div className="border-t border-slate-200 pt-4">
+              {post.metadata?.eventDetails && (
+                <div className="mb-3 text-sm text-slate-700">
+                  {post.metadata.eventDetails.title && (
+                    <p className="font-semibold text-slate-900">{post.metadata.eventDetails.title}</p>
+                  )}
+                  <div className="flex flex-wrap gap-3 mt-1">
+                    {post.metadata.eventDetails.location && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                        📍 {post.metadata.eventDetails.location}
+                      </span>
+                    )}
+                    {post.metadata.eventDetails.date && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">
+                        🗓️ {new Date(post.metadata.eventDetails.date).toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
               <div className="flex items-center justify-between mb-3">
                 <span className="text-sm font-medium text-slate-700">Will you attend?</span>
                 <div className="flex items-center space-x-4 text-xs text-slate-500">
@@ -118,31 +136,28 @@ const PostCard = ({ post, onRSVP }) => {
               <div className="flex space-x-2">
                 <button
                   onClick={() => handleRSVP('going')}
-                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    rsvpStatus === 'going'
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${rsvpStatus === 'going'
                       ? 'bg-emerald-500 text-white shadow-md'
                       : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-                  }`}
+                    }`}
                 >
                   ✓ Going
                 </button>
                 <button
                   onClick={() => handleRSVP('interested')}
-                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    rsvpStatus === 'interested'
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${rsvpStatus === 'interested'
                       ? 'bg-amber-500 text-white shadow-md'
                       : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                  }`}
+                    }`}
                 >
                   ☆ Interested
                 </button>
                 <button
                   onClick={() => handleRSVP('notGoing')}
-                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${
-                    rsvpStatus === 'notGoing'
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${rsvpStatus === 'notGoing'
                       ? 'bg-rose-500 text-white shadow-md'
                       : 'bg-rose-100 text-rose-700 hover:bg-rose-200'
-                  }`}
+                    }`}
                 >
                   ✗ Not Going
                 </button>
