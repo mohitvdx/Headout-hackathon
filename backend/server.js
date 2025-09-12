@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
 
+const postRoutes = require('./routes/postRoutes');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
@@ -18,6 +20,9 @@ app.get('/', (req, res) => {
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
+
+// API Routes
+app.use('/api/posts', postRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
