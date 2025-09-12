@@ -1,10 +1,15 @@
 const openaiService = require('../services/openaiService');
 const Post = require('../models/Post');
+const mongoose = require('mongoose');
+
+// In-memory fallback storage when MongoDB is not connected
+let inMemoryPosts = [];
+const isDbConnected = () => mongoose.connection && mongoose.connection.readyState === 1;
 
 class PostController {
   async detectPostType(req, res) {
     try {
-      const { content } = req.body;
+      const { content, apiKey } = req.body;
 
       if (!content || !content.trim()) {
         return res.status(400).json({
@@ -12,8 +17,8 @@ class PostController {
         });
       }
 
-      const postType = await openaiService.detectPostType(content);
-      const extractedEntities = await openaiService.extractEntities(content, postType);
+      const postType = await openaiService.detectPostType(content, apiKey || process.env.OPENAI_API_KEY);
+      const extractedEntities = await openaiService.extractEntities(content, postType, apiKey || process.env.OPENAI_API_KEY);
 
       res.json({
         success: true,
@@ -34,7 +39,7 @@ class PostController {
 
   async generatePost(req, res) {
     try {
-      const { prompt } = req.body;
+      const { prompt, apiKey } = req.body;
 
       if (!prompt || !prompt.trim()) {
         return res.status(400).json({
@@ -42,7 +47,7 @@ class PostController {
         });
       }
 
-      const generatedContent = await openaiService.generatePost(prompt);
+      const generatedContent = await openaiService.generatePost(prompt, apiKey || process.env.OPENAI_API_KEY);
 
       res.json({
         success: true,
@@ -114,9 +119,21 @@ class PostController {
         }
       }
 
+      if (!isDbConnected()) {
+        const mockPost = {
+          _id: new mongoose.Types.ObjectId().toString(),
+          ...postData,
+          metadata: postData.metadata || {},
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        inMemoryPosts.unshift(mockPost);
+        return res.status(201).json({ success: true, data: mockPost });
+      }
+
       const post = new Post(postData);
       const savedPost = await post.save();
-
+      
       res.status(201).json({
         success: true,
         data: savedPost
@@ -131,10 +148,14 @@ class PostController {
 
   async getPosts(req, res) {
     try {
+      if (!isDbConnected()) {
+        return res.json({ success: true, data: inMemoryPosts.slice(0, 50) });
+      }
+
       const posts = await Post.find()
         .sort({ createdAt: -1 })
         .limit(50);
-
+      
       res.json({
         success: true,
         data: posts
@@ -156,6 +177,23 @@ class PostController {
         return res.status(400).json({
           error: 'Invalid RSVP status'
         });
+      }
+
+      if (!isDbConnected()) {
+        const idx = inMemoryPosts.findIndex(p => p._id === postId);
+        if (idx === -1) {
+          return res.status(404).json({ error: 'Post not found' });
+        }
+        const post = inMemoryPosts[idx];
+        if (post.type !== 'event') {
+          return res.status(400).json({ error: 'RSVP only available for event posts' });
+        }
+        post.metadata = post.metadata || {};
+        post.metadata.rsvpCounts = post.metadata.rsvpCounts || { going: 0, interested: 0, notGoing: 0 };
+        post.metadata.rsvpCounts[status] = (post.metadata.rsvpCounts[status] || 0) + 1;
+        post.updatedAt = new Date();
+        inMemoryPosts[idx] = post;
+        return res.json({ success: true, data: post });
       }
 
       const post = await Post.findById(postId);
@@ -181,9 +219,9 @@ class PostController {
 
       // Increment the RSVP count
       post.metadata.rsvpCounts[status] += 1;
-
+      
       await post.save();
-
+      
       res.json({
         success: true,
         data: post

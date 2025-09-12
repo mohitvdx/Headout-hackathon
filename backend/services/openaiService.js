@@ -2,24 +2,28 @@ const OpenAI = require('openai');
 
 class OpenAIService {
   constructor() {
-    if (!process.env.OPENAI_API_KEY) {
-      console.warn('OpenAI API key not found in environment variables. AI features will be disabled.');
-      this.client = null;
-      return;
-    }
-    
-    this.client = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
+    // No persistent client; we will create per-request clients using provided API keys.
+    this.client = null;
   }
 
-  async detectPostType(content) {
-    if (!this.client) {
-      throw new Error('OpenAI service not configured');
+  async detectPostType(content, apiKey) {
+    const heuristic = () => {
+      const text = (content || '').toLowerCase();
+      const isEvent = /(event|workshop|party|meet|seminar|webinar|conference|rsvp|tomorrow|today|\b\d{1,2}(:\d{2})?\s?(am|pm)\b)/i.test(text);
+      const isLostFound = /(lost|found|missing|wallet|id card|keys|phone|bag)/i.test(text);
+      if (isLostFound) return 'lost_found';
+      if (isEvent) return 'event';
+      return 'announcement';
+    };
+
+    if (!apiKey) {
+      // Heuristic fallback
+      return heuristic();
     }
 
     try {
-      const response = await this.client.chat.completions.create({
+      const client = new OpenAI({ apiKey });
+      const response = await client.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {
@@ -51,13 +55,48 @@ class OpenAIService {
       }
     } catch (error) {
       console.error('Error detecting post type:', error);
-      throw new Error('Failed to detect post type');
+      // Fallback to heuristic instead of failing hard
+      return heuristic();
     }
   }
 
-  async extractEntities(content, postType) {
-    if (!this.client) {
-      throw new Error('OpenAI service not configured');
+  async extractEntities(content, postType, apiKey) {
+    const heuristic = () => {
+      const text = content || '';
+      if (postType === 'event') {
+        const locationMatch = text.match(/at\s+([A-Za-z0-9 &,-]+)/i);
+        const dateMatch = text.match(/\b(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4}|today|tomorrow)\b/i);
+        return {
+          title: undefined,
+          location: locationMatch ? locationMatch[1].trim() : null,
+          date: dateMatch ? dateMatch[0] : null,
+        };
+      }
+      if (postType === 'lost_found') {
+        const status = /\bfound\b/i.test(text) ? 'found' : (/\blost\b/i.test(text) ? 'lost' : null);
+        const itemName = (text.match(/lost\s+(my\s+)?([^,\.]+)/i) || [])[2] || (text.match(/found\s+(a\s+|an\s+|the\s+)?([^,\.]+)/i) || [])[3] || null;
+        const locationMatch = text.match(/near\s+([^,\.]+)/i) || text.match(/at\s+([^,\.]+)/i);
+        return {
+          itemStatus: status,
+          itemName: itemName ? itemName.trim() : null,
+          location: locationMatch ? locationMatch[1].trim() : null,
+        };
+      }
+      if (postType === 'announcement') {
+        const deptMatch = text.match(/from\s+the\s+([A-Za-z &]+)\s+department/i) || text.match(/\b([A-Za-z &]+)\s+department\b/i);
+        const deadlineMatch = text.match(/deadline\s+(on\s+)?(\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4}|tomorrow|today)/i);
+        return {
+          department: deptMatch ? deptMatch[1].trim() : null,
+          deadline: deadlineMatch ? deadlineMatch[2] : null,
+          priority: /urgent|asap|immediately/i.test(text) ? 'high' : 'medium',
+        };
+      }
+      return {};
+    };
+
+    if (!apiKey) {
+      // Heuristic extraction
+      return heuristic();
     }
 
     try {
@@ -98,7 +137,8 @@ class OpenAIService {
           return {};
       }
 
-      const response = await this.client.chat.completions.create({
+      const client = new OpenAI({ apiKey });
+      const response = await client.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {
@@ -118,21 +158,22 @@ class OpenAIService {
         return JSON.parse(response.choices[0].message.content.trim());
       } catch (parseError) {
         console.error('Error parsing extracted entities:', parseError);
-        return {};
+        return heuristic();
       }
     } catch (error) {
       console.error('Error extracting entities:', error);
-      return {};
+      return heuristic();
     }
   }
 
-  async generatePost(prompt) {
-    if (!this.client) {
-      throw new Error('OpenAI service not configured');
+  async generatePost(prompt, apiKey) {
+    if (!apiKey) {
+      throw new Error('OpenAI API key not provided');
     }
 
     try {
-      const response = await this.client.chat.completions.create({
+      const client = new OpenAI({ apiKey });
+      const response = await client.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [
           {

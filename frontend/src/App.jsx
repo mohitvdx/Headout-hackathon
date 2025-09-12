@@ -46,7 +46,8 @@ function App() {
       setLoading(true)
 
       // First detect the post type
-      const typeResponse = await api.detectPostType(content)
+      const apiKey = localStorage.getItem('openai_api_key') || undefined
+      const typeResponse = await api.detectPostType(content, apiKey)
 
       setCurrentPost({
         content: content,

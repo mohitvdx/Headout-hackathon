@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { api } from '../utils/api'
+import { getSession } from '../utils/session'
 import { useToast } from '../hooks/useToast'
 
 const PostInput = ({ onSubmit }) => {
@@ -31,7 +32,8 @@ const PostInput = ({ onSubmit }) => {
 
     setIsGenerating(true);
     try {
-      const result = await api.generatePost(prompt);
+      const apiKey = localStorage.getItem('openai_api_key') || undefined
+      const result = await api.generatePost(prompt, apiKey);
       
       if (result.success) {
         setContent(result.data.generatedContent)
