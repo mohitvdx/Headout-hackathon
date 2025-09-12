@@ -55,7 +55,7 @@ const PostInput = ({ onSubmit }) => {
   }
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.01] p-6">
+    <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.01] p-6">
       <form onSubmit={handleSubmit}>
         <div className="flex items-start space-x-4">
           {/* Profile Avatar Placeholder */}

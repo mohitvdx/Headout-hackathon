@@ -75,11 +75,11 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
   }
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.01] p-6">
+    <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.01] p-6">
       <div className="mb-4">
         <h2 className="text-xl font-semibold text-slate-900 mb-2">Does everything look good?</h2>
         <p className="text-slate-600 text-sm">Review your post before publishing</p>
-        
+
       </div>
 
       {/* Post Content */}
@@ -89,7 +89,7 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
             <span className="text-slate-600 font-medium">U</span>
           </div>
           <div className="flex-1">
-            <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+            <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
               {isEditing ? (
                 <div>
                   <textarea

@@ -55,24 +55,24 @@ const PostCard = ({ post, onRSVP }) => {
   }
 
   return (
-    <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.01] p-6">
+    <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300 hover:scale-[1.01] p-6">
       <div className="flex items-start space-x-3">
         {/* Profile Avatar */}
         <div className="w-10 h-10 bg-slate-300 rounded-full flex items-center justify-center flex-shrink-0">
           <span className="text-slate-600 font-medium">U</span>
         </div>
         <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-2">
-            <span className="font-medium text-slate-900">{post.author || 'You'}</span>
-            <span className="text-slate-600 text-sm">
+          <div className="flex items-center space-x-3 mb-2">
+            <span className="font-semibold text-slate-900">{post.author || 'You'}</span>
+            <span className="text-slate-500 text-sm">
               {new Date(post.timestamp).toLocaleString()}
             </span>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">
               <span className="mr-1">{getPostTypeIcon(post.type)}</span>
               {post.type.charAt(0).toUpperCase() + post.type.slice(1)}
             </span>
           </div>
-          <p className="text-slate-900 whitespace-pre-wrap mb-4">{post.content}</p>
+          <p className="text-slate-900 whitespace-pre-wrap mb-4 leading-7">{post.content}</p>
 
           {/* Lost & Found Details */}
           {post.type === 'lost_found' && post.metadata?.lostFoundDetails && (

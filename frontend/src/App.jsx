@@ -15,7 +15,7 @@ function App() {
   const [currentPost, setCurrentPost] = useState(null)
   const [showPreview, setShowPreview] = useState(false)
   const [loading, setLoading] = useState(true)
-  
+
   const { toasts, showSuccess, showError, hideToast } = useToast()
 
   // Load posts on component mount
@@ -121,10 +121,10 @@ function App() {
         <div className="max-w-2xl mx-auto py-8 px-4">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">
+              <h1 className="text-4xl font-semibold text-slate-900 tracking-tight">
                 Campus Feed
               </h1>
-              <p className="text-slate-600 text-sm mt-1">Textbox → AI Preview → Confirmation → Feed</p>
+              <p className="text-slate-600 text-base mt-1">Textbox → AI Preview → Confirmation → Feed</p>
             </div>
             <div className="flex items-center space-x-2" />
           </div>
