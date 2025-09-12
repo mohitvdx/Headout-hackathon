@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 const PostPreview = ({ post, onRestart, onPublish }) => {
   const [isEditing, setIsEditing] = useState(false)
   const [editedContent, setEditedContent] = useState(post.content)
+  const [entities, setEntities] = useState(post.extractedEntities || {})
 
   const getPostTypeIcon = (type) => {
     switch (type) {
@@ -30,6 +31,35 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
     }
   }
 
+  const fieldsForType = useMemo(() => {
+    switch (post.type) {
+      case 'event':
+        return [
+          { key: 'title', label: 'Title', type: 'text' },
+          { key: 'location', label: 'Location', type: 'text' },
+          { key: 'date', label: 'Date', type: 'datetime-local' },
+        ]
+      case 'lost_found':
+        return [
+          { key: 'itemStatus', label: 'Status', type: 'select', options: ['lost', 'found'] },
+          { key: 'itemName', label: 'Item name', type: 'text' },
+          { key: 'location', label: 'Location', type: 'text' },
+        ]
+      case 'announcement':
+        return [
+          { key: 'department', label: 'Department', type: 'text' },
+          { key: 'deadline', label: 'Deadline', type: 'datetime-local' },
+          { key: 'priority', label: 'Priority', type: 'select', options: ['high', 'medium', 'low'] },
+        ]
+      default:
+        return []
+    }
+  }, [post.type])
+
+  const handleEntityChange = (key, value) => {
+    setEntities((prev) => ({ ...prev, [key]: value }))
+  }
+
   const handleSaveEdit = () => {
     setIsEditing(false)
     // Update the post content
@@ -39,7 +69,8 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
   const handlePublish = () => {
     onPublish({
       ...post,
-      content: editedContent
+      content: editedContent,
+      extractedEntities: entities,
     })
   }
 
@@ -98,21 +129,50 @@ const PostPreview = ({ post, onRestart, onPublish }) => {
         </div>
       </div>
 
-      {/* Extracted Entities Preview */}
-      {post.extractedEntities && Object.keys(post.extractedEntities).length > 0 && (
-        <div className="mb-6 border-t border-slate-200 pt-4">
-          <h3 className="text-lg font-semibold text-slate-800 mb-2">AI has extracted these details:</h3>
-          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-2">
-            {Object.entries(post.extractedEntities).map(([key, value]) => value && (
-              <div key={key} className="flex text-sm">
-                <span className="font-medium text-slate-600 w-28 capitalize">{key.replace(/([A-Z])/g, ' $1')}:</span>
-                <span className="text-slate-800 font-semibold">{value}</span>
+      {/* Structured Entities Editor */}
+      <div className="mb-6 border-t border-slate-200 pt-4">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-lg font-semibold text-slate-800">Details</h3>
+          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${getPostTypeColor(post.type)}`}>
+            {getPostTypeIcon(post.type)}
+            <span className="ml-1 capitalize">{post.type.replace('_', ' ')}</span>
+          </span>
+        </div>
+        {fieldsForType.length > 0 ? (
+          <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3">
+            {fieldsForType.map((field) => (
+              <div key={field.key} className="grid grid-cols-4 items-center gap-3">
+                <label className="col-span-1 text-sm font-medium text-slate-600">
+                  {field.label}
+                </label>
+                <div className="col-span-3">
+                  {field.type === 'select' ? (
+                    <select
+                      value={entities[field.key] ?? ''}
+                      onChange={(e) => handleEntityChange(field.key, e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select</option>
+                      {field.options.map((opt) => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <input
+                      type={field.type}
+                      value={entities[field.key] ?? ''}
+                      onChange={(e) => handleEntityChange(field.key, e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  )}
+                </div>
               </div>
             ))}
           </div>
-          <p className="text-xs text-slate-500 mt-2">You can edit these details after publishing.</p>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-slate-500">No additional details for this post type.</p>
+        )}
+      </div>
 
       {/* Action Buttons */}
       <div className="flex justify-between">
