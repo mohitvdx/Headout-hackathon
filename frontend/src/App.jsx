@@ -8,6 +8,7 @@ import LoadingSpinner from './components/LoadingSpinner'
 import { useToast } from './hooks/useToast'
 import { api, ApiError } from './utils/api'
 import Settings from './components/Settings'
+import { ensureSession, getSession } from './utils/session'
 import './App.css'
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
 
   // Load posts on component mount
   useEffect(() => {
+    ensureSession()
     loadPosts()
   }, [])
 
@@ -42,10 +44,10 @@ function App() {
   const handleSubmit = async (content) => {
     try {
       setLoading(true)
-      
+
       // First detect the post type
       const typeResponse = await api.detectPostType(content)
-      
+
       setCurrentPost({
         content: content,
         type: typeResponse.data.type,
@@ -71,13 +73,14 @@ function App() {
 
   const handlePublish = async (post) => {
     try {
+      const session = getSession()
       const result = await api.createPost({
         content: post.content,
         type: post.type,
-        author: 'You',
+        author: session?.displayName || 'You',
         extractedEntities: post.extractedEntities
       })
-      
+
       setPosts(prevPosts => [result.data, ...prevPosts])
       setCurrentPost(null)
       setShowPreview(false)
@@ -95,9 +98,9 @@ function App() {
   const handleRSVP = async (postId, status) => {
     try {
       const result = await api.updateRSVP(postId, status)
-      
-      setPosts(prevPosts => 
-        prevPosts.map(post => 
+
+      setPosts(prevPosts =>
+        prevPosts.map(post =>
           post._id === postId ? result.data : post
         )
       )
@@ -138,13 +141,13 @@ function App() {
           {!showPreview ? (
             <PostInput onSubmit={handleSubmit} />
           ) : (
-            <PostPreview 
+            <PostPreview
               post={currentPost}
               onRestart={handleRestart}
               onPublish={handlePublish}
             />
           )}
-          
+
           {/* Posts Feed */}
           <div className="mt-6 space-y-4">
             {loading ? (
@@ -153,9 +156,9 @@ function App() {
               </div>
             ) : posts.length > 0 ? (
               posts.map((post) => (
-                <PostCard 
-                  key={post._id || post.id} 
-                  post={{...post, id: post._id || post.id}} 
+                <PostCard
+                  key={post._id || post.id}
+                  post={{ ...post, id: post._id || post.id }}
                   onRSVP={handleRSVP}
                 />
               ))

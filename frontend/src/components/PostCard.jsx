@@ -63,7 +63,7 @@ const PostCard = ({ post, onRSVP }) => {
         </div>
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-2">
-            <span className="font-medium text-slate-900">You</span>
+            <span className="font-medium text-slate-900">{post.author || 'You'}</span>
             <span className="text-slate-600 text-sm">
               {new Date(post.timestamp).toLocaleString()}
             </span>
@@ -79,8 +79,8 @@ const PostCard = ({ post, onRSVP }) => {
             <div className="border-t border-slate-200 pt-4 mt-4">
               <div className="flex items-center space-x-4">
                 <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${post.metadata.lostFoundDetails.itemStatus === 'lost'
-                    ? 'bg-rose-100 text-rose-800'
-                    : 'bg-emerald-100 text-emerald-800'
+                  ? 'bg-rose-100 text-rose-800'
+                  : 'bg-emerald-100 text-emerald-800'
                   }`}>
                   {post.metadata.lostFoundDetails.itemStatus?.toUpperCase()}
                 </span>
@@ -166,8 +166,8 @@ const PostCard = ({ post, onRSVP }) => {
                 <button
                   onClick={() => handleRSVP('going')}
                   className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${rsvpStatus === 'going'
-                      ? 'bg-emerald-500 text-white shadow-md'
-                      : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                    ? 'bg-emerald-500 text-white shadow-md'
+                    : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                     }`}
                 >
                   ✓ Going
@@ -175,8 +175,8 @@ const PostCard = ({ post, onRSVP }) => {
                 <button
                   onClick={() => handleRSVP('interested')}
                   className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${rsvpStatus === 'interested'
-                      ? 'bg-amber-500 text-white shadow-md'
-                      : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                    ? 'bg-amber-500 text-white shadow-md'
+                    : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
                     }`}
                 >
                   ☆ Interested
@@ -184,8 +184,8 @@ const PostCard = ({ post, onRSVP }) => {
                 <button
                   onClick={() => handleRSVP('notGoing')}
                   className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all duration-200 ${rsvpStatus === 'notGoing'
-                      ? 'bg-rose-500 text-white shadow-md'
-                      : 'bg-rose-100 text-rose-700 hover:bg-rose-200'
+                    ? 'bg-rose-500 text-white shadow-md'
+                    : 'bg-rose-100 text-rose-700 hover:bg-rose-200'
                     }`}
                 >
                   ✗ Not Going
