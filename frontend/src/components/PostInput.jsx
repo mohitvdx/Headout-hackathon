@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { api } from '../utils/api'
-import { getSession } from '../utils/session'
 import { useToast } from '../hooks/useToast'
 
 const PostInput = ({ onSubmit }) => {
@@ -32,9 +31,8 @@ const PostInput = ({ onSubmit }) => {
 
     setIsGenerating(true);
     try {
-      const apiKey = localStorage.getItem('openai_api_key') || undefined
-      const result = await api.generatePost(prompt, apiKey);
-      
+      const result = await api.generatePost(prompt);
+
       if (result.success) {
         setContent(result.data.generatedContent)
         setPrompt('')
@@ -64,7 +62,7 @@ const PostInput = ({ onSubmit }) => {
           <div className="w-12 h-12 bg-slate-300 rounded-full flex items-center justify-center flex-shrink-0">
             <span className="text-slate-600 font-medium text-lg">U</span>
           </div>
-          
+
           {/* Input Area */}
           <div className="flex-1">
             <textarea
@@ -72,12 +70,11 @@ const PostInput = ({ onSubmit }) => {
               onChange={(e) => setContent(e.target.value)}
               onFocus={handleFocus}
               placeholder="What would you like to share?"
-              className={`w-full border border-slate-200 rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${
-                isExpanded ? 'min-h-[120px]' : 'min-h-[50px]'
-              }`}
+              className={`w-full border border-slate-200 rounded-lg px-4 py-3 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 ${isExpanded ? 'min-h-[120px]' : 'min-h-[50px]'
+                }`}
               rows={isExpanded ? 4 : 1}
             />
-            
+
             {/* Action Buttons - Only show when expanded */}
             {isExpanded && (
               <div className="mt-3 flex items-center justify-between">
@@ -92,7 +89,7 @@ const PostInput = ({ onSubmit }) => {
                     </svg>
                     <span className="text-sm font-medium">Photo</span>
                   </button>
-                  
+
                   <button
                     type="button"
                     className="flex items-center space-x-2 text-slate-600 hover:text-slate-800 transition-colors"
@@ -102,7 +99,7 @@ const PostInput = ({ onSubmit }) => {
                     </svg>
                     <span className="text-sm font-medium">Video</span>
                   </button>
-                  
+
                   <button
                     type="button"
                     onClick={() => setShowPromptInput(true)}
@@ -115,7 +112,7 @@ const PostInput = ({ onSubmit }) => {
                     </span>
                   </button>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <button
                     type="button"

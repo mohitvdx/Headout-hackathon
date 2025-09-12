@@ -1,6 +1,6 @@
 const API_BASE_URL = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL)
   ? import.meta.env.VITE_API_URL.replace(/\/$/, '')
-  : 'http://localhost:5050/api';
+  : 'http://localhost:5053/api';
 
 class ApiError extends Error {
   constructor(message, status) {
@@ -20,13 +20,13 @@ const handleResponse = async (response) => {
 
 export const api = {
   // Post detection
-  detectPostType: async (content, apiKey) => {
+  detectPostType: async (content) => {
     const response = await fetch(`${API_BASE_URL}/posts/detect-type`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ content, apiKey }),
+      body: JSON.stringify({ content }),
     });
 
     if (!response.ok) {
@@ -37,13 +37,13 @@ export const api = {
     return response.json();
   },
 
-  generatePost: async (prompt, apiKey) => {
+  generatePost: async (prompt) => {
     const response = await fetch(`${API_BASE_URL}/posts/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ prompt, apiKey }),
+      body: JSON.stringify({ prompt }),
     });
 
     if (!response.ok) {

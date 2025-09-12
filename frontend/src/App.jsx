@@ -7,7 +7,6 @@ import Toast from './components/Toast'
 import LoadingSpinner from './components/LoadingSpinner'
 import { useToast } from './hooks/useToast'
 import { api, ApiError } from './utils/api'
-import Settings from './components/Settings'
 import { ensureSession, getSession } from './utils/session'
 import './App.css'
 
@@ -16,7 +15,7 @@ function App() {
   const [currentPost, setCurrentPost] = useState(null)
   const [showPreview, setShowPreview] = useState(false)
   const [loading, setLoading] = useState(true)
-  const [showSettings, setShowSettings] = useState(false)
+  
   const { toasts, showSuccess, showError, hideToast } = useToast()
 
   // Load posts on component mount
@@ -46,8 +45,7 @@ function App() {
       setLoading(true)
 
       // First detect the post type
-      const apiKey = localStorage.getItem('openai_api_key') || undefined
-      const typeResponse = await api.detectPostType(content, apiKey)
+      const typeResponse = await api.detectPostType(content)
 
       setCurrentPost({
         content: content,
@@ -128,14 +126,7 @@ function App() {
               </h1>
               <p className="text-slate-600 text-sm mt-1">Textbox → AI Preview → Confirmation → Feed</p>
             </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setShowSettings(true)}
-                className="inline-flex items-center space-x-2 px-3 py-2 rounded-md bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm"
-              >
-                <span className="text-sm font-medium">Settings</span>
-              </button>
-            </div>
+            <div className="flex items-center space-x-2" />
           </div>
 
           {/* Main Content */}
@@ -170,8 +161,6 @@ function App() {
             )}
           </div>
 
-          {/* Settings Modal */}
-          <Settings isOpen={showSettings} onClose={() => setShowSettings(false)} />
 
           {/* Toast Notifications */}
           {toasts.map((toast) => (
