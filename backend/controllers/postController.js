@@ -1,10 +1,10 @@
 const openaiService = require('../services/openaiService');
-const Post = require('../models/Post');
+// DB removed: using in-memory only for demo
 const mongoose = require('mongoose');
 
 // In-memory fallback storage when MongoDB is not connected
 let inMemoryPosts = [];
-const isDbConnected = () => mongoose.connection && mongoose.connection.readyState === 1;
+const isDbConnected = () => false; // force in-memory path
 
 class PostController {
   async detectPostType(req, res) {
@@ -130,14 +130,7 @@ class PostController {
         inMemoryPosts.unshift(mockPost);
         return res.status(201).json({ success: true, data: mockPost });
       }
-
-      const post = new Post(postData);
-      const savedPost = await post.save();
-      
-      res.status(201).json({
-        success: true,
-        data: savedPost
-      });
+      // unreachable with in-memory only
     } catch (error) {
       console.error('Error creating post:', error);
       res.status(500).json({
@@ -148,18 +141,7 @@ class PostController {
 
   async getPosts(req, res) {
     try {
-      if (!isDbConnected()) {
-        return res.json({ success: true, data: inMemoryPosts.slice(0, 50) });
-      }
-
-      const posts = await Post.find()
-        .sort({ createdAt: -1 })
-        .limit(50);
-      
-      res.json({
-        success: true,
-        data: posts
-      });
+      return res.json({ success: true, data: inMemoryPosts.slice(0, 50) });
     } catch (error) {
       console.error('Error fetching posts:', error);
       res.status(500).json({
@@ -196,36 +178,7 @@ class PostController {
         return res.json({ success: true, data: post });
       }
 
-      const post = await Post.findById(postId);
-      if (!post) {
-        return res.status(404).json({
-          error: 'Post not found'
-        });
-      }
-
-      if (post.type !== 'event') {
-        return res.status(400).json({
-          error: 'RSVP only available for event posts'
-        });
-      }
-
-      // Initialize metadata if it doesn't exist
-      if (!post.metadata) {
-        post.metadata = { rsvpCounts: { going: 0, interested: 0, notGoing: 0 } };
-      }
-      if (!post.metadata.rsvpCounts) {
-        post.metadata.rsvpCounts = { going: 0, interested: 0, notGoing: 0 };
-      }
-
-      // Increment the RSVP count
-      post.metadata.rsvpCounts[status] += 1;
-      
-      await post.save();
-      
-      res.json({
-        success: true,
-        data: post
-      });
+      // unreachable with in-memory only
     } catch (error) {
       console.error('Error updating RSVP:', error);
       res.status(500).json({
