@@ -38,13 +38,17 @@ export const api = {
   },
 
   generatePost: async (prompt) => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
     const response = await fetch(`${API_BASE_URL}/posts/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ prompt }),
+      signal: controller.signal,
     });
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const error = await response.json();

@@ -6,6 +6,7 @@ const PostInput = ({ onSubmit }) => {
   const [content, setContent] = useState('')
   const [isExpanded, setIsExpanded] = useState(false)
   const [isGenerating, setIsGenerating] = useState(false)
+  const [generateHint, setGenerateHint] = useState('')
   const [showPromptInput, setShowPromptInput] = useState(false)
   const [prompt, setPrompt] = useState('')
   const { showToast } = useToast()
@@ -30,6 +31,10 @@ const PostInput = ({ onSubmit }) => {
     }
 
     setIsGenerating(true);
+    setGenerateHint('')
+    const slowTimer = setTimeout(() => {
+      setGenerateHint('This is taking longer than usual…')
+    }, 3500)
     try {
       const result = await api.generatePost(prompt);
 
@@ -43,8 +48,13 @@ const PostInput = ({ onSubmit }) => {
       }
     } catch (error) {
       console.error('Error generating post:', error)
-      showToast('Error connecting to server', 'error')
+      if (error.name === 'AbortError') {
+        showToast('Generation timed out. Please try again.', 'error')
+      } else {
+        showToast('Error connecting to server', 'error')
+      }
     } finally {
+      clearTimeout(slowTimer)
       setIsGenerating(false)
     }
   }
@@ -141,7 +151,7 @@ const PostInput = ({ onSubmit }) => {
       {/* AI Prompt Modal */}
       {showPromptInput && (
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-lg p-6 w-full max-w-md mx-4 shadow-lg">
+          <div className="bg-white/95 backdrop-blur-sm border border-slate-200/60 rounded-2xl p-6 w-full max-w-md mx-4 shadow-lg">
             <div className="flex justify-between items-center mb-4">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-indigo-600 rounded-full flex items-center justify-center">
@@ -171,11 +181,20 @@ const PostInput = ({ onSubmit }) => {
                   id="prompt"
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  placeholder="e.g., 'My recent promotion to Senior Developer' or 'Tips for remote work productivity'"
+                  placeholder="e.g., 'Study Jam at the Library tomorrow 6pm'"
                   className="w-full px-4 py-3 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                   rows={3}
                   autoFocus
                 />
+                {isGenerating && (
+                  <div className="mt-3 flex items-center space-x-3 text-sm text-slate-600">
+                    <svg className="w-4 h-4 animate-spin text-slate-500" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"></path>
+                    </svg>
+                    <span>{generateHint || 'Generating…'}</span>
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end space-x-3">
